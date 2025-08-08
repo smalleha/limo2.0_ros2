@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "limo_base/serial_port.h"
+#include "limo2_base/serial_port.h"
 #include <fcntl.h>
 
 namespace AgileX {

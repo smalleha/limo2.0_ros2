@@ -48,11 +48,11 @@
  #include <sensor_msgs/msg/imu.hpp>
  
  #include "std_msgs/msg/string.hpp"
- #include "limo2_msgs/msg/limo_status.hpp"
+ #include "limo2_msgs/msg/limo2_status.hpp"
 
  
  #include "limo2_base/serial_port.h"
- #include "limo2_base/limo_protocol.h"
+ #include "limo2_base/limo2_protocol.h"
  
  namespace AgileX {
  
@@ -63,12 +63,11 @@
      void run();
  
  private:
-     
      void connect(std::string dev_name, uint32_t bouadrate);
      void readData();
      void processRxData(uint8_t data);
-     void parseFrame(const LimoFrame& frame);
-     void sendFrame(const LimoFrame& frame);
+     void parseFrame(const Limo2Frame& frame);
+     void sendFrame(const Limo2Frame& frame);
      void setMotionCommand(double linear_vel, double steer_angle,
                            double lateral_vel, double angular_vel);
      void enableCommandedMode();
@@ -76,15 +75,21 @@
      void twistCmdCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
      double normalizeAngle(double angle);
      double degToRad(double deg);
-     double convertInnerAngleToCentral(double inner_angle);
-     double convertCentralAngleToInner(double central_angle);
+     double ConvertInnerAngleToCentral(double inner_angle);
+     double ConvertCentralAngleToInner(double central_angle);
      void publishOdometry(double stamp, double linear_velocity,
-                          double angular_velocity, double lateral_velocity,
-                          double steering_angle);
-     void publishLimoState(double stamp, uint8_t vehicle_state, uint8_t control_mode,
+                          double angular_velocity, double steering_angle);
+     void publishLimo2State(double stamp, uint8_t vehicle_state, uint8_t control_mode,
                            double battery_voltage, uint16_t error_code, int8_t motion_mode);
      void publishIMUData(double stamp);
- 
+     double CalculateSteeringAngle(geometry_msgs::msg::Twist msg,double& radius);
+     void SetMotionMode(uint8_t mode);
+     double computeSteeringAngle(double delta_fl_deg, double delta_fr_deg,
+                            double delta_rl_deg, double delta_rr_deg);
+     geometry_msgs::msg::Quaternion createQuaternionMsgFromYaw(double yaw);
+
+
+
  private:
      rclcpp::Node *node_;
      std::shared_ptr<SerialPort> port_;
@@ -101,7 +106,7 @@
      bool use_mcnamu_ = false;
      double present_theta_,last_theta_,delta_theta_,real_theta_,rad;
      rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
-     rclcpp::Publisher<limo_msgs2::msg::LimoStatus>::SharedPtr status_publisher_;
+     rclcpp::Publisher<limo2_msgs::msg::Limo2Status>::SharedPtr status_publisher_;
  
      rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr motion_cmd_sub_;
 
@@ -112,15 +117,25 @@
      double position_x_ = 0.0;
      double position_y_ = 0.0;
      double theta_ = 0.0;
- 
+     double linear_velocity = 0.0;
+     double angular_velocity = 0.0;
+     double lateral_velocity = 0.0;
+     double steering_angle_ = 0.0;
+
      ImuData imu_data_;
      uint8_t motion_mode_;  // current motion type
- 
-     static constexpr double max_inner_angle_ = 0.48869;  // 28 degree
-     static constexpr double track_ = 0.172;           // m (left right wheel distance)
-     static constexpr double wheelbase_ = 0.2;         // m (front rear wheel distance)
-     static constexpr double left_angle_scale_ = 2.47;
-     static constexpr double right_angle_scale_ = 2.47;
+     
+     rclcpp::Time last_time_;
+     rclcpp::Time current_time_;
+
+     static constexpr double max_inner_angle_ = 0.40;  // 40 degree
+     static constexpr double track_ = 0.165;           // m (left right wheel distance)
+     static constexpr double wheelbase_ = 0.21;         // m (front rear wheel distance)
+     static constexpr double left_angle_scale_ = 0.8;
+     static constexpr double right_angle_scale_ = 0.8;
+     static constexpr double min_turn_radius_ = 1.7453;
+     static constexpr double max_angular_speed = 1.0;
+
  };
  
  }

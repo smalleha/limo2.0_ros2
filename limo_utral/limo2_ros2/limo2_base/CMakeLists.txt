@@ -37,9 +37,15 @@ add_executable(limo2_base
     src/limo2_base_node.cpp
     src/limo2_driver.cpp
     src/serial_port.cpp)
-ament_target_dependencies(limo_base  rclcpp std_msgs tf2 tf2_ros nav_msgs sensor_msgs limo_msgs tf2_geometry_msgs )
+ament_target_dependencies(limo2_base  rclcpp std_msgs tf2 tf2_ros nav_msgs sensor_msgs limo2_msgs tf2_geometry_msgs )
 
-
+install(TARGETS  
+  limo2_base  
+  DESTINATION lib/${PROJECT_NAME})
+  
+install(DIRECTORY launch src 
+  DESTINATION share/${PROJECT_NAME}/)
+  
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
